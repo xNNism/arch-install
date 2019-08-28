@@ -126,18 +126,47 @@ cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 arch-chroot /mnt systemctl enable fstrim.timer
 
 arch-chroot /mnt pacman -S linux-headers linux-hardened linux-hardened-headers linux-zen linux-zen-headers 
-
+#
 genfstab -U /mnt >> /mnt/etc/fstab
 sed -i 's/relatime/noatime/' /mnt/etc/fstab
 arch-chroot /mnt ln -s -f /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 arch-chroot /mnt hwclock --systohc
+#
 sed -i "s/#en_US.UTF-8 UTF-8/" /mnt/etc/locale.gen
 arch-chroot /mnt locale-gen
 echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
+#
 echo $HOSTNAME > /mnt/etc/hostname
 printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
-
-
+#
+arch-chroot /mnt pacman -S networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
+arch-chroot /mnt systemctl enable NetworkManager.service
+#
+# mkinitcpio
+#
+arch-chroot /mnt sed -i "MODULES="nvidia nvidia_modeset nvidia_uvm nvidia_drm"" /etc/mkinitcpio.conf
+arch-chroot /mnt sed -i 's/ block / block keyboard keymap /' /etc/mkinitcpio.conf
+arch-chroot /mnt sed -i 's/ filesystems keyboard / encrypt filesystems /' /etc/mkinitcpio.conf
+arch-chroot /mnt mkinitcpio -P
+#
+# BOOTLOADER
+#
+arch-chroot /mnt pacman -S  intel-ucode
+CMDLINE_LINUX_ROOT="root=$DEVICE_ROOT"
+BOOTLOADER_ALLOW_DISCARDS=":allow-discards"
+CMDLINE_LINUX="cryptdevice=PARTUUID=$PARTUUID_ROOT:$LVM_VOLUME_PHISICAL$BOOTLOADER_ALLOW_DISCARDS"
+#
+arch-chroot /mnt pacman -S grub dosfstools
+    pacman_install "grub dosfstools"
+    arch-chroot /mnt sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/' /etc/default/grub
+    arch-chroot /mnt sed -i 's/#GRUB_SAVEDEFAULT="true"/GRUB_SAVEDEFAULT="true"/' /etc/default/grub
+    arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /etc/default/grub
+    arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="'$CMDLINE_LINUX'"/' /etc/default/grub
+    echo "" >> /mnt/etc/default/grub
+    echo "# alis" >> /mnt/etc/default/grub
+    echo "GRUB_DISABLE_SUBMENU=y" >> /mnt/etc/default/grub
+arch-chroot /mnt pacman -S efibootmgr
+arch-chroot /mnt grub-install --target=x86_64-efi --bootloader-id=grub --efi-directory=$ESP_DIRECTORY --recheck
 
 #cat >>/etc/pacman.conf <<EOF
 #[x0C-r3po]
