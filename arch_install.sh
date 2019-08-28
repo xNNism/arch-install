@@ -58,6 +58,27 @@ exec 1> >(tee "stdout.log")
 exec 2> >(tee "stderr.log")
 
 timedatectl set-ntp true
+################################################################
+
+    if [ -d /mnt/boot ]; then
+        umount /mnt/boot
+        umount /mnt
+    fi
+    if [ -e "/dev/mapper/$LVM_VOLUME_LOGICAL" ]; then
+        if [ -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" ]; then
+            cryptsetup close $LVM_VOLUME_LOGICAL
+        fi
+    fi
+    if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
+        lvremove --force "$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
+        vgremove --force "/dev/mapper/$LVM_VOLUME_GROUP"
+        pvremove "/dev/mapper/$LVM_VOLUME_PHISICAL"
+        if [ -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" ]; then
+            cryptsetup close $LVM_VOLUME_PHISICAL
+        fi
+    fi
+    partprobe $DEVICE
+}
 
 sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
