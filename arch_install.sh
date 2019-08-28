@@ -78,7 +78,6 @@ timedatectl set-ntp true
         fi
     fi
     partprobe $DEVICE
-}
 
 sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
