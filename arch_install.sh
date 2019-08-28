@@ -111,18 +111,18 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 ### Install and configure the basic system 
 ########################################################################
 
-pacman -Sy reflector
-reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
-sleep 1
-cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
-
 cat >>/etc/pacman.conf <<EOF
 [x0C-r3po]
 SigLevel = Optional TrustAll
 Server = $REPO_URL
 EOF
 
+pacman -Sy reflector
+reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
+
 pacstrap /mnt base base-devel
+
+cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 arch-chroot /mnt systemctl enable fstrim.timer
 
 pacman_install linux-headers linux-hardened linux-hardened-headers linux-zen linux-zen-headers 
