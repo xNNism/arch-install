@@ -10,6 +10,7 @@ REPO_URL="https://raw.githubusercontent.com/xNNism/x0C-r3po/master/"
 LVM_VOLUME_PHISICAL="lvm"
 LVM_VOLUME_GROUP="vg"
 LVM_VOLUME_LOGICAL="root"
+PARTITION_OPTIONS="defaults,noatime"
 
 ########################################################################
 ################## Get infomation from user ###
@@ -76,7 +77,22 @@ vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
 lvcreate -l 100%FREE -n $LVM_VOLUME_LOGICAL $LVM_VOLUME_GROUP
 #
 DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
-
+#
+wipefs -a $PARTITION_BOOT
+wipefs -a $DEVICE_ROOT
+mkfs.fat -n ESP -F32 $PARTITION_BOOT
+mkfs.ext4 -L root $DEVICE_ROOT
+#
+mount -o "$PARTITION_OPTIONS" "$DEVICE_ROOT" /mnt
+mkdir /mnt/boot
+mount -o "$PARTITION_OPTIONS" "$PARTITION_BOOT" /mnt/boot
+#
+BOOT_DIRECTORY=/boot
+ESP_DIRECTORY=/boot
+UUID_BOOT=$(blkid -s UUID -o value $PARTITION_BOOT)
+UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
+PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
+PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 
 ### Setup the disk and partitions ###
 # swap_size=$(free --mebi | awk '/Mem:/ {print $2}')
@@ -90,23 +106,23 @@ DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
 
 # Simple globbing was not enough as on one device I needed to match /dev/mmcblk0p1
 # but not /dev/mmcblk0boot1 while being able to match /dev/sda1 on other devices.
-part_boot="$(ls ${device}* | grep -E "^${device}p?1$")"
-part_swap="$(ls ${device}* | grep -E "^${device}p?2$")"
-part_root="$(ls ${device}* | grep -E "^${device}p?3$")"
-
-wipefs "${part_boot}"
-wipefs "${part_swap}"
-wipefs "${part_root}"
-
-mkfs.vfat -F32 "${part_boot}"
-mkswap "${part_swap}"
-mkfs.f2fs -f "${part_root}"
-
-swapon "${part_swap}"
-mount "${part_root}" /mnt
-mkdir /mnt/boot
-mount "${part_boot}" /mnt/boot
-
+#part_boot="$(ls ${device}* | grep -E "^${device}p?1$")"
+#part_swap="$(ls ${device}* | grep -E "^${device}p?2$")"
+#part_root="$(ls ${device}* | grep -E "^${device}p?3$")"
+#
+#wipefs "${part_boot}"
+#wipefs "${part_swap}"
+#wipefs "${part_root}"
+#
+#mkfs.vfat -F32 "${part_boot}"
+#mkswap "${part_swap}"
+#mkfs.f2fs -f "${part_root}"
+#
+#swapon "${part_swap}"
+#mount "${part_root}" /mnt
+#mkdir /mnt/boot
+#mount "${part_boot}" /mnt/boot
+#
 ### Install and configure the basic system ###
 cat >>/etc/pacman.conf <<EOF
 [x0C-r3po]
