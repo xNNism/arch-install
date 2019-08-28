@@ -117,6 +117,9 @@ SigLevel = Optional TrustAll
 Server = $REPO_URL
 EOF
 
+pacman -Sy reflector
+reflector -c DE -n 10 > /etc/pacman.d/mirrorlist
+
 pacstrap /mnt base base-devel
 genfstab -t PARTUUID /mnt >> /mnt/etc/fstab
 echo "${hostname}" > /mnt/etc/hostname
@@ -142,7 +145,7 @@ EOF
 
 echo "LANG=en_GB.UTF-8" > /mnt/etc/locale.conf
 
-arch-chroot /mnt useradd -mU -s /usr/bin/zsh -G wheel,uucp,video,audio,storage,games,input "$user"
+arch-chroot /mnt useradd -mU -s /usr/bin/bash -G wheel,uucp,lock,video,audio,storage,games,input "$user"
 arch-chroot /mnt chsh -s /usr/bin/zsh
 
 echo "$user:$password" | chpasswd --root /mnt
