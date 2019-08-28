@@ -74,7 +74,6 @@ vgremove --force "/dev/mapper/$LVM_VOLUME_GROUP"
 pvremove "/dev/mapper/$LVM_VOLUME_PHISICAL"
 cryptsetup close $LVM_VOLUME_PHISICAL
 fi
-partprobe $DEVICE
 
 ### START PARTITIONING
 sgdisk --zap-all $DEVICE
