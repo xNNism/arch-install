@@ -16,10 +16,10 @@ PARTITION_OPTIONS="defaults,noatime"
 #
 ### Get infomation from user
 
-### hostname
-hostname=$(dialog --stdout --inputbox "Enter hostname" 0 0) || exit 1
+### HOSTNAME
+HOSTNAME=$(dialog --stdout --inputbox "Enter hostname" 0 0) || exit 1
 clear
-: ${hostname:?"hostname cannot be empty"}
+: ${HOSTNAME:?"hostname cannot be empty"}
 
 ### username
 user=$(dialog --stdout --inputbox "Enter admin username" 0 0) || exit 1
@@ -27,12 +27,12 @@ clear
 : ${user:?"user cannot be empty"}
 
 ### password
-password=$(dialog --stdout --passwordbox "Enter admin password" 0 0) || exit 1
+ROOT_PASSWORD=$(dialog --stdout --passwordbox "Enter admin password" 0 0) || exit 1
 clear
-: ${password:?"password cannot be empty"}
-password2=$(dialog --stdout --passwordbox "Enter admin password again" 0 0) || exit 1
+: ${ROOT_PASSWORD:?"password cannot be empty"}
+ROOT_PASSWORD2=$(dialog --stdout --passwordbox "Enter admin password again" 0 0) || exit 1
 clear
-[[ "$password" == "$password2" ]] || ( echo "Passwords did not match"; exit 1; )
+[[ "$ROOT_PASSWORD" == "$ROOT_PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
 
 ### device
 DEVICELIST=$(lsblk -dplnx size -o name,size | grep -Ev "boot|rpmb|loop" | tac)
@@ -111,42 +111,70 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 ### Install and configure the basic system 
 ########################################################################
 
+pacman -Sy reflector
+reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
+sleep 1
+cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+
 cat >>/etc/pacman.conf <<EOF
 [x0C-r3po]
 SigLevel = Optional TrustAll
 Server = $REPO_URL
 EOF
 
-pacman -Sy reflector
-reflector -c DE -n 10 > /etc/pacman.d/mirrorlist
-
 pacstrap /mnt base base-devel
-genfstab -t PARTUUID /mnt >> /mnt/etc/fstab
-echo "${hostname}" > /mnt/etc/hostname
+arch-chroot /mnt systemctl enable fstrim.timer
 
-cat >>/mnt/etc/pacman.conf <<EOF
-[x0C-r3po]
-SigLevel = Optional TrustAll
-Server = $REPO_URL
-EOF
+pacman_install linux-headers linux-hardened linux-hardened-headers linux-zen linux-zen-headers 
 
-arch-chroot /mnt bootctl install
+genfstab -U /mnt >> /mnt/etc/fstab
+sed -i 's/relatime/noatime/' /mnt/etc/fstab
+arch-chroot /mnt ln -s -f /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+arch-chroot /mnt hwclock --systohc
+sed -i "s/#en_US.UTF-8 UTF-8/" /mnt/etc/locale.gen
+arch-chroot /mnt locale-gen
+echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
+echo $HOSTNAME > /mnt/etc/hostname
+printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
 
-cat <<EOF > /mnt/boot/loader/loader.conf
-default arch
-EOF
+#cat >>/etc/pacman.conf <<EOF
+#[x0C-r3po]
+#SigLevel = Optional TrustAll
+#Server = $REPO_URL
+#EOF
+#
+#pacman -Sy reflector
+#reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
+#sleep 1
+#cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 
-cat <<EOF > /mnt/boot/loader/entries/arch.conf
-title    Arch Linux
-linux    /vmlinuz-linux
-initrd   /initramfs-linux.img
-options  root=PARTUUID=$(blkid -s PARTUUID -o value "$part_root") rw
-EOF
+#pacstrap /mnt base base-devel
+#genfstab -t PARTUUID /mnt >> /mnt/etc/fstab
+#echo "${hostname}" > /mnt/etc/hostname
 
-echo "LANG=en_GB.UTF-8" > /mnt/etc/locale.conf
-
-arch-chroot /mnt useradd -mU -s /usr/bin/bash -G wheel,uucp,lock,video,audio,storage,games,input "$user"
-arch-chroot /mnt chsh -s /usr/bin/zsh
-
-echo "$user:$password" | chpasswd --root /mnt
-echo "root:$password" | chpasswd --root /mnt
+#cat >>/mnt/etc/pacman.conf <<EOF
+#[x0C-r3po]
+#SigLevel = Optional TrustAll
+#Server = $REPO_URL
+#EOF
+#
+#arch-chroot /mnt bootctl install
+#
+#cat <<EOF > /mnt/boot/loader/loader.conf
+#default arch
+#EOF
+#
+#cat <<EOF > /mnt/boot/loader/entries/arch.conf
+#title    Arch Linux
+#linux    /vmlinuz-linux
+#initrd   /initramfs-linux.img
+#options  root=PARTUUID=$(blkid -s PARTUUID -o value "$part_root") rw
+#EOF
+#
+#echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
+#
+#arch-chroot /mnt useradd -mU -s /usr/bin/bash -G wheel,uucp,lock,video,audio,storage,games,input "$user"
+#arch-chroot /mnt chsh -s /usr/bin/bash
+#
+#echo "$user:$password" | chpasswd --root /mnt
+#echo "root:$password" | chpasswd --root /mnt
