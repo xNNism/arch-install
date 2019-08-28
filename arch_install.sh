@@ -6,79 +6,77 @@ set -uo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 REPO_URL="https://raw.githubusercontent.com/xNNism/x0C-r3po/master/"
-
 LVM_VOLUME_PHISICAL="lvm"
 LVM_VOLUME_GROUP="vg"
 LVM_VOLUME_LOGICAL="root"
 PARTITION_OPTIONS="defaults,noatime"
 
-########################################################################
-################## Get infomation from user ###
-########################################################################
+#
+#
+#
+### Get infomation from user
+
 ### hostname
-########################################################################
 hostname=$(dialog --stdout --inputbox "Enter hostname" 0 0) || exit 1
 clear
 : ${hostname:?"hostname cannot be empty"}
-########################################################################
+
 ### username
-########################################################################
 user=$(dialog --stdout --inputbox "Enter admin username" 0 0) || exit 1
 clear
 : ${user:?"user cannot be empty"}
-########################################################################
+
 ### password
-########################################################################
 password=$(dialog --stdout --passwordbox "Enter admin password" 0 0) || exit 1
 clear
 : ${password:?"password cannot be empty"}
 password2=$(dialog --stdout --passwordbox "Enter admin password again" 0 0) || exit 1
 clear
 [[ "$password" == "$password2" ]] || ( echo "Passwords did not match"; exit 1; )
-########################################################################
+
 ### device
-########################################################################
 DEVICELIST=$(lsblk -dplnx size -o name,size | grep -Ev "boot|rpmb|loop" | tac)
 DEVICE=$(dialog --stdout --menu "Select installation disk" 0 0 0 ${DEVICELIST}) || exit 1
 clear
-########################################################################
+
 ### LVM
-########################################################################
 PARTITION_ROOT_ENCRYPTION_PASSWORD=$(dialog --stdout --passwordbox "Enter LVM password" 0 0) || exit 1
 clear
 : ${PARTITION_ROOT_ENCRYPTION_PASSWORD:?"password cannot be empty"}
 PARTITION_ROOT_ENCRYPTION_PASSWORD2=$(dialog --stdout --passwordbox "Enter LVM password again" 0 0) || exit 1
 clear
 [[ "$PARTITION_ROOT_ENCRYPTION_PASSWORD" == "$PARTITION_ROOT_ENCRYPTION_PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
-
-
+### end
 
 ### Set up logging ###
 exec 1> >(tee "stdout.log")
 exec 2> >(tee "stderr.log")
 
 timedatectl set-ntp true
-################################################################
 
-    if [ -d /mnt/boot ]; then
-        umount /mnt/boot
-        umount /mnt
-    fi
-    if [ -e "/dev/mapper/$LVM_VOLUME_LOGICAL" ]; then
-        if [ -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" ]; then
-            cryptsetup close $LVM_VOLUME_LOGICAL
-        fi
-    fi
-    if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
-        lvremove --force "$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
-        vgremove --force "/dev/mapper/$LVM_VOLUME_GROUP"
-        pvremove "/dev/mapper/$LVM_VOLUME_PHISICAL"
-        if [ -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" ]; then
-            cryptsetup close $LVM_VOLUME_PHISICAL
-        fi
-    fi
-    partprobe $DEVICE
+########################################################################
+### START PARTITIONING  
+########################################################################
+#
+### undo previous install attempt
+if [ -d /mnt/boot ]; then
+umount /mnt/boot
+umount /mnt
+fi
 
+if [ -e "/dev/mapper/$LVM_VOLUME_LOGICAL" ]; then
+cryptsetup close $LVM_VOLUME_LOGICAL
+fi
+
+if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
+lvremove --force "$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
+vgremove --force "/dev/mapper/$LVM_VOLUME_GROUP"
+pvremove "/dev/mapper/$LVM_VOLUME_PHISICAL"
+cryptsetup close $LVM_VOLUME_PHISICAL
+fi
+partprobe $DEVICE
+
+### START PARTITIONING
 sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
 PARTITION_BOOT="${DEVICE}1"
@@ -114,43 +112,19 @@ UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
 PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
 PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 
-### Setup the disk and partitions ###
-# swap_size=$(free --mebi | awk '/Mem:/ {print $2}')
-# swap_end=$(( $swap_size + 129 + 1 ))MiB
 
-# parted --script "${device}" -- mklabel gpt \
-#   mkpart ESP fat32 1Mib 129MiB \
-#   set 1 boot on \
-#   mkpart primary linux-swap 129MiB ${swap_end} \
-#   mkpart primary ext4 ${swap_end} 100%
+########################################################################
+### Install and configure the basic system 
+########################################################################
 
-# Simple globbing was not enough as on one device I needed to match /dev/mmcblk0p1
-# but not /dev/mmcblk0boot1 while being able to match /dev/sda1 on other devices.
-#part_boot="$(ls ${device}* | grep -E "^${device}p?1$")"
-#part_swap="$(ls ${device}* | grep -E "^${device}p?2$")"
-#part_root="$(ls ${device}* | grep -E "^${device}p?3$")"
-#
-#wipefs "${part_boot}"
-#wipefs "${part_swap}"
-#wipefs "${part_root}"
-#
-#mkfs.vfat -F32 "${part_boot}"
-#mkswap "${part_swap}"
-#mkfs.f2fs -f "${part_root}"
-#
-#swapon "${part_swap}"
-#mount "${part_root}" /mnt
-#mkdir /mnt/boot
-#mount "${part_boot}" /mnt/boot
-#
-### Install and configure the basic system ###
 cat >>/etc/pacman.conf <<EOF
 [x0C-r3po]
 SigLevel = Optional TrustAll
 Server = $REPO_URL
 EOF
 
-pacstrap /mnt x0C
+# pacstrap /mnt base base-devel
+pacstrap /mnt x0C-r3po
 genfstab -t PARTUUID /mnt >> /mnt/etc/fstab
 echo "${hostname}" > /mnt/etc/hostname
 
