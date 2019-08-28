@@ -125,7 +125,7 @@ pacstrap /mnt base base-devel
 cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 arch-chroot /mnt systemctl enable fstrim.timer
 
-pacman_install linux-headers linux-hardened linux-hardened-headers linux-zen linux-zen-headers 
+arch-chroot /mnt pacman -S linux-headers linux-hardened linux-hardened-headers linux-zen linux-zen-headers 
 
 genfstab -U /mnt >> /mnt/etc/fstab
 sed -i 's/relatime/noatime/' /mnt/etc/fstab
@@ -136,6 +136,8 @@ arch-chroot /mnt locale-gen
 echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
 echo $HOSTNAME > /mnt/etc/hostname
 printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
+
+
 
 #cat >>/etc/pacman.conf <<EOF
 #[x0C-r3po]
