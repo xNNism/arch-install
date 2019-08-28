@@ -64,14 +64,9 @@ umount /mnt/boot
 umount /mnt
 fi
 
-if [ -e "/dev/mapper/$LVM_VOLUME_LOGICAL" ]; then
-cryptsetup close $LVM_VOLUME_LOGICAL
-fi
-
 if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
-lvremove --force "$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
-vgremove --force "/dev/mapper/$LVM_VOLUME_GROUP"
-pvremove "/dev/mapper/$LVM_VOLUME_PHISICAL"
+lvremove --force "$LVM_VOLUME_GROUP"
+pvremove --force --force "/dev/mapper/$LVM_VOLUME_PHISICAL"
 cryptsetup close $LVM_VOLUME_PHISICAL
 fi
 
