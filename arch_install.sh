@@ -5,11 +5,11 @@
 set -uo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
-REPO_URL="https://raw.githubusercontent.com/xNNism/x0C-r3po/master/"
-LVM_VOLUME_PHISICAL="lvm"
-LVM_VOLUME_GROUP="vg"
-LVM_VOLUME_LOGICAL="root"
-PARTITION_OPTIONS="defaults,noatime"
+export REPO_URL="https://raw.githubusercontent.com/xNNism/x0C-r3po/master/"
+export LVM_VOLUME_PHISICAL="lvm"
+export LVM_VOLUME_GROUP="vg"
+export LVM_VOLUME_LOGICAL="root"
+export PARTITION_OPTIONS="defaults,noatime"
 
 #
 #
@@ -59,23 +59,23 @@ timedatectl set-ntp true
 ########################################################################
 #
 ### undo previous install attempt
-if [ -d /mnt/boot ]; then
-umount /mnt/boot
-umount /mnt
-fi
-
-if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
-lvremove --force "$LVM_VOLUME_GROUP"
-pvremove --force --force "/dev/mapper/$LVM_VOLUME_PHISICAL"
-cryptsetup close $LVM_VOLUME_PHISICAL
-fi
-
+#if [ -d /mnt/boot ]; then
+#umount /mnt/boot
+#umount /mnt
+#fi
+#
+#if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
+#lvremove --force "$LVM_VOLUME_GROUP"
+#pvremove --force --force "/dev/mapper/$LVM_VOLUME_PHISICAL"
+#cryptsetup close $LVM_VOLUME_PHISICAL
+#fi
+#
 ### START PARTITIONING
 sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
-PARTITION_BOOT="${DEVICE}1"
-PARTITION_ROOT="${DEVICE}2"
-DEVICE_ROOT="${DEVICE}2"
+export PARTITION_BOOT="${DEVICE}1"
+export PARTITION_ROOT="${DEVICE}2"
+export DEVICE_ROOT="${DEVICE}2"
 #
 parted -s $DEVICE mklabel gpt mkpart primary fat32 1MiB 512MiB mkpart primary ext4 512MiB 100% set 1 boot on
 sgdisk -t=1:ef00 $DEVICE
@@ -88,7 +88,7 @@ pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
 vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
 lvcreate -l 100%FREE -n $LVM_VOLUME_LOGICAL $LVM_VOLUME_GROUP
 #
-DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
+# export DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
 #
 wipefs -a $PARTITION_BOOT
 wipefs -a $DEVICE_ROOT
@@ -99,13 +99,12 @@ mount -o "$PARTITION_OPTIONS" "$DEVICE_ROOT" /mnt
 mkdir /mnt/boot
 mount -o "$PARTITION_OPTIONS" "$PARTITION_BOOT" /mnt/boot
 #
-BOOT_DIRECTORY=/boot
-ESP_DIRECTORY=/boot
-UUID_BOOT=$(blkid -s UUID -o value $PARTITION_BOOT)
-UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
-PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
-PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
-
+export BOOT_DIRECTORY=/boot
+export ESP_DIRECTORY=/boot
+export UUID_BOOT=$(blkid -s UUID -o value $PARTITION_BOOT)
+export UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
+export PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
+export PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 
 ########################################################################
 ### Install and configure the basic system 
@@ -159,8 +158,8 @@ CMDLINE_LINUX="cryptdevice=PARTUUID=$PARTUUID_ROOT:$LVM_VOLUME_PHISICAL$BOOTLOAD
 #
     arch-chroot /mnt sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/' /etc/default/grub
     arch-chroot /mnt sed -i 's/#GRUB_SAVEDEFAULT="true"/GRUB_SAVEDEFAULT="true"/' /etc/default/grub
-    arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /etc/default/grub
-    arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="'$CMDLINE_LINUX'"/' /etc/default/grub
+    arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet apparmor=1 security=apparmor ipv6.disable_ipv6=1"' /etc/default/grub
+    arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX="cryptdevice=PARTUUID=$[PARTUUID_ROOT]:lvm:allow-discards"' /etc/default/grub
     echo "" >> /mnt/etc/default/grub
     echo "# alis" >> /mnt/etc/default/grub
     echo "GRUB_DISABLE_SUBMENU=y" >> /mnt/etc/default/grub
