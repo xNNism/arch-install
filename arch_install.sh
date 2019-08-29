@@ -152,30 +152,28 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 #########    INSTALL BASE SYSTEM       ##
 #########################################
 
-cat >>/etc/pacman.conf <<EOF
-x0C-r3po]
-SigLevel = Optional TrustAll
-Server = $REPO_URL
-EOF
-
-	pacman -Sy --needed --noconfirm reflector
+	wget https://github.com/xNNism/arch-install/raw/master/config/pacman.conf
+	cp pacman.conf /etc/pacman.conf
+	cp pacman.conf /mnt/etc/pacman.conf
+	#
+	pacman -Syyy --needed --noconfirm reflector
 	reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
-
+	#
 	pacstrap /mnt base base-devel
-
+	#
 	cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+	#
 	arch-chroot /mnt systemctl enable fstrim.timer
-
-#
+	#
 	genfstab -U /mnt >> /mnt/etc/fstab
 	sed -i 's/relatime/noatime/' /mnt/etc/fstab
 	arch-chroot /mnt ln -s -f /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 	arch-chroot /mnt hwclock --systohc
-#
+	#
 	sed -i "s/#en_US.UTF-8/en_US.UTF-8/" /mnt/etc/locale.gen
 	arch-chroot /mnt locale-gen
 	echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
-#
+	#
 	echo $HOSTNAME > /mnt/etc/hostname
 	printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
 
@@ -221,6 +219,11 @@ EOF
 #########    INSTALL SYSTEM       ##
 ####################################
 
+	arch-chroot /mnt pacman-key --init
+	arch-chroot /mnt pacman-key --populate archlinux
+	arch-chroot /mnt pacman -Syyy
+	arch-chroot /mnt pacman -Syyyuuu
+	
 # NetworkManager
 	arch-chroot /mnt $PACMAN networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
 	arch-chroot /mnt systemctl enable NetworkManager.service
