@@ -152,7 +152,7 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 #########    INSTALL BASE SYSTEM       ##
 #########################################
 
-	curl -o /etc/pacman.conf https://github.com/xNNism/arch-install/raw/master/config/pacman.conf
+	curl -o /etc/pacman.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/pacman.conf
 		#
 	pacman -Syyy --needed --noconfirm reflector
 	reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
