@@ -1,6 +1,5 @@
 #!/bin/bash
 
-pacman -Sy --noconfirm git
-git clone https://github.com/xnnism/arch-install
-cd arch-install
-./arch-install.sh
+pacman -Sy --needed --noconfirm git curl
+curl https://github.com/xnnism/arch-install/install.sh
+./install.sh
