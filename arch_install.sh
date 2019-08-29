@@ -42,7 +42,6 @@ LVM_VOLUME_PHISICAL="lvm"
 LVM_VOLUME_GROUP="vg"
 LVM_VOLUME_LOGICAL="root"
 PARTITION_OPTIONS="defaults,noatime"
-PACMAN="pacman -S --needed --noconfirm"
 
 ##########################################
 #########    SET USER & PASSWORDS       ##
@@ -179,7 +178,7 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 #########    INSTALL KERNELS       ##
 #####################################
 
-	arch-chroot /mnt $PACMAN linux-headers linux-hardened linux-hardened-headers
+	arch-chroot /mnt pacman -S --needed --noconfirm linux-headers linux-hardened linux-hardened-headers
 
 ######################################
 #########    SETUP BOOTLOADER       ##
@@ -193,7 +192,7 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 #########    SETUP GRUB       ##
 ################################
 
-	arch-chroot /mnt $PACMAN intel-ucode grub dosfstools efibootmgr os-prober mtools freetype2 fuse2 libisoburn
+	arch-chroot /mnt pacman -S --needed --noconfirm intel-ucode grub dosfstools efibootmgr os-prober mtools freetype2 fuse2 libisoburn
 	CMDLINE_LINUX="cryptdevice=PARTUUID=$PARTUUID_ROOT:lvm:allow-discards"
     arch-chroot /mnt sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/' /etc/default/grub
     arch-chroot /mnt sed -i 's/#GRUB_SAVEDEFAULT="true"/GRUB_SAVEDEFAULT="true"/' /etc/default/grub
@@ -219,35 +218,35 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 
 	arch-chroot /mnt pacman-key --init
 	arch-chroot /mnt pacman-key --populate archlinux
-	arch-chroot /mnt pacman -Syyy
-	arch-chroot /mnt pacman -Syyyuuu
 	cp -r /etc/pacman.conf /mnt/etc/pacman.conf
+	arch-chroot /mnt pacman -Syyy && arch-chroot /mnt pacman -Syyyuuu
+	
 # NetworkManager
-	arch-chroot /mnt $PACMAN networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
+	arch-chroot /mnt pacman -S --needed --noconfirm networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
 	arch-chroot /mnt systemctl enable NetworkManager.service
 	
 # NETWORK
-	arch-chroot /mnt $PACMAN git ufw gufw dialog
+	arch-chroot /mnt pacman -S --needed --noconfirm git ufw gufw dialog
 	arch-chroot /mnt systemctl enable ufw.service
 
 # SYSTEM
-	arch-chroot /mnt $PACMAN usbctl grub-customizer arch-silence-grub-theme trizen libgksu gksu apparmor tilix tilix-themes-git vte-tilix-common vte3-tilix gogh-git
-	arch-chroot /mnt $PACMAN repoctl-git gparted htop gnome-disk-utility gnome-initial-setup gnome-logs usbview hardinfo qjournalctl
+	arch-chroot /mnt pacman -S --needed --noconfirm usbctl grub-customizer trizen libgksu gksu apparmor tilix tilix-themes-git vte-tilix-common vte3-tilix gogh-git
+	arch-chroot /mnt pacman -S --needed --noconfirm repoctl-git gparted htop gnome-disk-utility gnome-initial-setup gnome-logs usbview hardinfo qjournalctl
 	groupadd -r audit
 	gpasswd -a $USER_NAME audit
 	arch-chroot /mnt systemctl enable deny-new-usb.service
 	
 # GPU Drivers
-	arch-chroot /mnt $PACMAN xf86-video-nouveau xf86-video-amdgpu xf86-video-intel xf86-video-ati xf86-video-fbdev xf86-video-openchrome xf86-video-dummy xf86-video-qxl xf86-video-vesa xf86-video-vmware
-	arch-chroot /mnt $PACMAN nvidia-390xx-dkms nvidia-390xx-utils libvdpau libxnvctrl nvidia-390xx-settings opencl-nvidia-390xx 
+	arch-chroot /mnt pacman -S --needed --noconfirm xf86-video-nouveau xf86-video-amdgpu xf86-video-intel xf86-video-ati xf86-video-fbdev xf86-video-openchrome xf86-video-dummy xf86-video-qxl xf86-video-vesa xf86-video-vmware
+	arch-chroot /mnt pacman -S --needed --noconfirm nvidia-390xx-dkms nvidia-390xx-utils libvdpau libxnvctrl nvidia-390xx-settings opencl-nvidia-390xx 
 	arch-chroot /mnt nvidia-xconfig
 	
 # LIGHTDM
-	arch-chroot /mnt $PACMAN lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
+	arch-chroot /mnt pacman -S --needed --noconfirm lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
 	arch-chroot /mnt systemctl enable lightdm.service
 
 # DESKTOP
-	arch-chroot /mnt $PACMAN mate mate-extra
+	arch-chroot /mnt pacman -S --needed --noconfirm mate mate-extra
     # arch-chroot /mnt mkdir "/home/$USER_NAME/Downloads"
     # arch-chroot /mnt mkdir "/home/$USER_NAME/Documents"
     # arch-chroot /mnt mkdir "/home/$USER_NAME/Videos"
@@ -258,32 +257,32 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	arch-chroot /mnt ln -s "/usr/lib/libmarco-private.so" "/usr/lib/libmarco-private.so.1"
 
 # APPEARANCE
-	arch-chroot /mnt $PACMAN adwaita-icon-theme deepin-gtk-theme adapta-gtk-theme materia-gtk-theme breeze-icons papirus-icon-theme arc-icon-theme deepin-icon-theme 
-	arch-chroot /mnt $PACMAN bedstead-fonts tamzen-font-git terminus-font ttf-zekton-rg 
+	arch-chroot /mnt pacman -S --needed --noconfirm adwaita-icon-theme deepin-gtk-theme adapta-gtk-theme materia-gtk-theme breeze-icons papirus-icon-theme arc-icon-theme deepin-icon-theme 
+	arch-chroot /mnt pacman -S --needed --noconfirm bedstead-fonts tamzen-font-git terminus-font ttf-zekton-rg
 
 # PROGRAMMING
-	arch-chroot /mnt $PACMAN geany geany-plugins geany-themes-git meld github-desktop-bin
+	arch-chroot /mnt pacman -S --needed --noconfirm geany geany-plugins geany-themes-git meld github-desktop-bin
 
 # DEVELOP	
-	arch-chroot /mnt $PACMAN cmake extra-cmake-modules gnome-common qt qt5 qtcreator python python-pip python2 python2-pip ghostwriter-git 
+	arch-chroot /mnt pacman -S --needed --noconfirm cmake extra-cmake-modules gnome-common qt qt5 qtcreator python python-pip python2 python2-pip ghostwriter-git 
 
 # INTERNET
-	arch-chroot /mnt $PACMAN firefox firefox-dark-reader firefox-adblock-plus firefox-ublock-origin firefox-extension-video-download-helper firefox-extension-privacybadger
-	arch-chroot /mnt $PACMAN chromium filezilla transmission-gtk gpg-crypter keepassxc  
-	arch-chroot /mnt $PACMAN python-grpcio-tools opensnitch-git
+	arch-chroot /mnt pacman -S --needed --noconfirm firefox firefox-dark-reader firefox-adblock-plus firefox-ublock-origin firefox-extension-video-download-helper firefox-extension-privacybadger
+	arch-chroot /mnt pacman -S --needed --noconfirm chromium filezilla transmission-gtk gpg-crypter keepassxc  
+	arch-chroot /mnt pacman -S --needed --noconfirm python-grpcio-tools opensnitch-git
 	
 # AUDIO
-	arch-chroot /mnt $PACMAN pulseaudio pulseaudio-bluetooth pulseaudio-equalizer-ladspa pavucontrol pulseaudio-alsa libpulse libcanberra-pulse paprefs
-	arch-chroot /mnt $PACMAN spotify spotify-adblock-git
+	arch-chroot /mnt pacman -S --needed --noconfirm pulseaudio pulseaudio-bluetooth pulseaudio-equalizer-ladspa pavucontrol pulseaudio-alsa libpulse libcanberra-pulse paprefs
+	arch-chroot /mnt pacman -S --needed --noconfirm spotify spotify-adblock-git
 	
 # VIDEO
-	arch-chroot /mnt $PACMAN vlc vlc-arc-dark-git smplayer smplayer-skins smplayer-themes 
+	arch-chroot /mnt pacman -S --needed --noconfirm vlc vlc-arc-dark-git smplayer smplayer-skins smplayer-themes 
 
 # OFFICE
-	arch-chroot /mnt $PACMAN libreoffice-fresh 
+	arch-chroot /mnt pacman -S --needed --noconfirm libreoffice-fresh 
 	
 # VPN
-	arch-chroot /mnt $PACMAN openvpn-update-systemd-resolved protonvpn-cli-git
+	arch-chroot /mnt pacman -S --needed --noconfirm openvpn-update-systemd-resolved protonvpn-cli-git
 	
 # INSTALL CONFIGS
 	arch-chroot /mnt curl -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/makepkg.conf
