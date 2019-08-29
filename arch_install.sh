@@ -1,6 +1,38 @@
 #!/bin/bash
 
-# WARNING: this script will destroy data on the selected disk.
+################################################################
+#															   #
+# WARNING: this script will destroy data on the selected disk. #
+#															   #
+################################################################
+
+######################################################
+#########    Colorize and add text parameters       ##
+######################################################
+
+blk=$(tput setaf 0) # black
+red=$(tput setaf 1) # red
+grn=$(tput setaf 2) # green
+ylw=$(tput setaf 3) # yellow
+blu=$(tput setaf 4) # blue
+mga=$(tput setaf 5) # magenta
+cya=$(tput setaf 6) # cyan
+wht=$(tput setaf 7) # white
+#
+txtbld=$(tput bold) # Bold
+bldblk=${txtbld}$(tput setaf 0) # black
+bldred=${txtbld}$(tput setaf 1) # red
+bldgrn=${txtbld}$(tput setaf 2) # green
+bldylw=${txtbld}$(tput setaf 3) # yellow
+bldblu=${txtbld}$(tput setaf 4) # blue
+bldmga=${txtbld}$(tput setaf 5) # magenta
+bldcya=${txtbld}$(tput setaf 6) # cyan
+bldwht=${txtbld}$(tput setaf 7) # white
+txtrst=$(tput sgr0) # Reset
+
+##################################
+#########    START SCRIPT       ##
+##################################
 
 set -uo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
@@ -11,17 +43,17 @@ LVM_VOLUME_GROUP="vg"
 LVM_VOLUME_LOGICAL="root"
 PARTITION_OPTIONS="defaults,noatime"
 PACMAN="pacman -S --needed --noconfirm"
-#
-#
-#
-### Get infomation from user
 
-### HOSTNAME
+##########################################
+#########    SET USER & PASSWORDS       ##
+##########################################
+#
+### HOSTNAME:
 HOSTNAME=$(dialog --stdout --inputbox "Enter hostname" 0 0) || exit 1
 clear
 : ${HOSTNAME:?"hostname cannot be empty"}
 
-### password
+### ROOT PASSWORD:
 ROOT_PASSWORD=$(dialog --stdout --passwordbox "Enter root password" 0 0) || exit 1
 clear
 : ${ROOT_PASSWORD:?"password cannot be empty"}
@@ -29,11 +61,12 @@ ROOT_PASSWORD2=$(dialog --stdout --passwordbox "Enter root password again" 0 0) 
 clear
 [[ "$ROOT_PASSWORD" == "$ROOT_PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
 
-### username
+### USERNAME:
 USER_NAME=$(dialog --stdout --inputbox "Enter username" 0 0) || exit 1
 clear
 : ${$USER_NAME:?"user cannot be empty"}
 
+### USER PASSWORD:
 USER_PASSWORD=$(dialog --stdout --passwordbox "Enter user password" 0 0) || exit 1
 clear
 : ${USER_PASSWORD:?"password cannot be empty"}
@@ -41,31 +74,31 @@ USER_PASSWORD2=$(dialog --stdout --passwordbox "Enter user password again" 0 0) 
 clear
 [[ "$USER_PASSWORD" == "$USER_PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
 
-### device
+### INSTALL DEVICE:
 DEVICELIST=$(lsblk -dplnx size -o name,size | grep -Ev "boot|rpmb|loop" | tac)
 DEVICE=$(dialog --stdout --menu "Select installation disk" 0 0 0 ${DEVICELIST}) || exit 1
 clear
 
-### LVM
+### LVM:
 PARTITION_ROOT_ENCRYPTION_PASSWORD=$(dialog --stdout --passwordbox "Enter LVM password" 0 0) || exit 1
 clear
 : ${PARTITION_ROOT_ENCRYPTION_PASSWORD:?"password cannot be empty"}
 PARTITION_ROOT_ENCRYPTION_PASSWORD2=$(dialog --stdout --passwordbox "Enter LVM password again" 0 0) || exit 1
 clear
 [[ "$PARTITION_ROOT_ENCRYPTION_PASSWORD" == "$PARTITION_ROOT_ENCRYPTION_PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
-### end
+### END OF USER INPUT
 
-### Set up logging ###
+### SET UP LOGS
 exec 1> >(tee "stdout.log")
 exec 2> >(tee "stderr.log")
 
+### SET UP NTP
 timedatectl set-ntp true
 
-########################################################################
-### START PARTITIONING  
-########################################################################
-#
-### undo previous install attempt
+###################################################
+#########    UNDO PREVIOUS INSTALL ATTEMPT       ##
+###################################################
+ 
 if [ -d /mnt/boot ]; then
 umount /mnt/boot
 umount /mnt
@@ -77,7 +110,10 @@ pvremove --force --force "/dev/mapper/$LVM_VOLUME_PHISICAL"
 cryptsetup close $LVM_VOLUME_PHISICAL
 fi
 
-### START PARTITIONING
+######################################
+#########    SETUP PARTITIONS       ##
+######################################
+
 sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
 PARTITION_BOOT="${DEVICE}1"
@@ -112,9 +148,9 @@ UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
 PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
 PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 
-########################################################################
-### Install and configure the basic system 
-########################################################################
+#########################################
+#########    INSTALL BASE SYSTEM       ##
+#########################################
 
 cat >>/etc/pacman.conf <<EOF
 x0C-r3po]
@@ -143,26 +179,26 @@ EOF
 	echo $HOSTNAME > /mnt/etc/hostname
 	printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
 
-#
-# Kernels
-#
+#####################################
+#########    INSTALL KERNELS       ##
+#####################################
+
 	arch-chroot /mnt $PACMAN linux-headers linux-hardened linux-hardened-headers
 
-#
-# mkinitcpio
-#
+######################################
+#########    SETUP BOOTLOADER       ##
+######################################
+
 	arch-chroot /mnt sed -i 's/ block / block keyboard keymap /' /etc/mkinitcpio.conf
 	arch-chroot /mnt sed -i 's/ filesystems keyboard / encrypt lvm2 filesystems /' /etc/mkinitcpio.conf
 	arch-chroot /mnt mkinitcpio -P
-#
-# BOOTLOADER
-#
+	
+################################
+#########    SETUP GRUB       ##
+################################
+
 	arch-chroot /mnt $PACMAN intel-ucode grub dosfstools efibootmgr os-prober mtools freetype2 fuse2 libisoburn
-# CMDLINE_LINUX_ROOT="root=$DEVICE_ROOT"
-# BOOTLOADER_ALLOW_DISCARDS=":allow-discards"
 	CMDLINE_LINUX="cryptdevice=PARTUUID=$PARTUUID_ROOT:lvm:allow-discards"
-# CMDLINE_LINUX="root=/dev/mapper/vg-root rw cryptdevice=PARTUUID=$PARTUUID_ROOT:lvm:allow-discards loglevel=3 quiet apparmor=1 security=apparmor ipv6.disable_ipv6=1"
-#
     arch-chroot /mnt sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/' /etc/default/grub
     arch-chroot /mnt sed -i 's/#GRUB_SAVEDEFAULT="true"/GRUB_SAVEDEFAULT="true"/' /etc/default/grub
     arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet"/GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet apparmor=1 security=apparmor ipv6.disable_ipv6=1"/' /etc/default/grub
@@ -173,12 +209,17 @@ EOF
 	arch-chroot /mnt os-prober
 	arch-chroot /mnt grub-mkconfig -o "/boot/grub/grub.cfg"
 
-#
-# CREATE USER
-#
+#################################
+#########    CREATE USER       ##
+#################################
+
 	arch-chroot /mnt sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
     arch-chroot /mnt useradd -m -G wheel,storage,optical,uucp,lock -s /bin/bash $USER_NAME
     printf "$USER_PASSWORD\n$USER_PASSWORD" | arch-chroot /mnt passwd $USER_NAME
+
+####################################
+#########    INSTALL SYSTEM       ##
+####################################
 
 # NetworkManager
 	arch-chroot /mnt $PACMAN networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
@@ -186,7 +227,6 @@ EOF
 	
 # NETWORK
 	arch-chroot /mnt $PACMAN git ufw gufw dialog
-	arch-chroot /mnt $PACMAN openvpn-update-systemd-resolved protonvpn-cli-git
 	arch-chroot /mnt systemctl enable ufw.service
 
 # SYSTEM
@@ -240,8 +280,13 @@ EOF
 
 # OFFICE
 	arch-chroot /mnt $PACMAN libreoffice-fresh 
+	
+# VPN
+	arch-chroot /mnt $PACMAN openvpn-update-systemd-resolved protonvpn-cli-git
 
-
+###################################
+#########     END OF SETUP       ##
+###################################
 #
 ### todo:
 # bashrc, icons, themes, makepkg...
