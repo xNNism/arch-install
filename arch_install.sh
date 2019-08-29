@@ -117,7 +117,7 @@ SigLevel = Optional TrustAll
 Server = $REPO_URL
 EOF
 
-pacman -Sy reflector
+pacman -Sy --needed --noconfirm reflector
 reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
 
 pacstrap /mnt base base-devel
@@ -125,14 +125,14 @@ pacstrap /mnt base base-devel
 cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 arch-chroot /mnt systemctl enable fstrim.timer
 
-arch-chroot /mnt pacman -S linux-headers linux-hardened linux-hardened-headers linux-zen linux-zen-headers 
+arch-chroot /mnt pacman -S linux-headers linux-hardened linux-hardened-headers
 #
 genfstab -U /mnt >> /mnt/etc/fstab
 sed -i 's/relatime/noatime/' /mnt/etc/fstab
 arch-chroot /mnt ln -s -f /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 arch-chroot /mnt hwclock --systohc
 #
-sed -i "s/#en_US.UTF-8/UTF-8/" /mnt/etc/locale.gen
+sed -i "s/#en_US.UTF-8/en_US.UTF-8/" /mnt/etc/locale.gen
 arch-chroot /mnt locale-gen
 echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
 #
