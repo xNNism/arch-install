@@ -169,7 +169,8 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	#
 	sed -i "s/#en_US.UTF-8/en_US.UTF-8/" /mnt/etc/locale.gen
 	arch-chroot /mnt locale-gen
-	echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
+	echo -e "KEYMAP=de" > /mnt/etc/vconsole.conf
+	# echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
 	#
 	echo $HOSTNAME > /mnt/etc/hostname
 	printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
@@ -228,6 +229,7 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 # NETWORK
 	arch-chroot /mnt pacman -S --needed --noconfirm git ufw gufw dialog
 	arch-chroot /mnt systemctl enable ufw.service
+	arch-chroot /mnt ufw enable
 
 # SYSTEM
 	arch-chroot /mnt pacman -S --needed --noconfirm usbctl grub-customizer trizen libgksu gksu apparmor audit lynis auditbeat arch-audit tilix tilix-themes-git vte-tilix-common vte3-tilix gogh-git
@@ -247,13 +249,13 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 
 # DESKTOP
 	arch-chroot /mnt pacman -S --needed --noconfirm mate mate-extra
-    # arch-chroot /mnt mkdir "/home/$USER_NAME/Downloads"
-    # arch-chroot /mnt mkdir "/home/$USER_NAME/Documents"
-    # arch-chroot /mnt mkdir "/home/$USER_NAME/Videos"
-    # arch-chroot /mnt mkdir "/home/$USER_NAME/Pictures"
-    # arch-chroot /mnt mkdir "/home/$USER_NAME/Public"
-    # arch-chroot /mnt chmod -R 755 /home/$USER_NAME/
-	# arch-chroot /mnt chown -R xnn:users /home/$USER_NAME/
+    arch-chroot /mnt mkdir "/home/$USER_NAME/Downloads"
+    arch-chroot /mnt mkdir "/home/$USER_NAME/Documents"
+    arch-chroot /mnt mkdir "/home/$USER_NAME/Videos"
+    arch-chroot /mnt mkdir "/home/$USER_NAME/Pictures"
+    arch-chroot /mnt mkdir "/home/$USER_NAME/Public"
+    arch-chroot /mnt chmod -R 755 /home/$USER_NAME/
+	arch-chroot /mnt chown -R $USER_NAME:users /home/$USER_NAME/
 	arch-chroot /mnt ln -s "/usr/lib/libmarco-private.so" "/usr/lib/libmarco-private.so.1"
 
 # APPEARANCE
