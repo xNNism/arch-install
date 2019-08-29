@@ -286,6 +286,9 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	
 # VPN
 	arch-chroot /mnt $PACMAN openvpn-update-systemd-resolved protonvpn-cli-git
+	
+# INSTALL CONFIGS
+	arch-chroot /mnt wget -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/makepkg.conf
 
 ###################################
 #########     END OF SETUP       ##
