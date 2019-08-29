@@ -230,10 +230,10 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	arch-chroot /mnt systemctl enable ufw.service
 
 # SYSTEM
-	arch-chroot /mnt pacman -S --needed --noconfirm usbctl grub-customizer trizen libgksu gksu apparmor tilix tilix-themes-git vte-tilix-common vte3-tilix gogh-git
-	arch-chroot /mnt pacman -S --needed --noconfirm repoctl-git gparted htop gnome-disk-utility gnome-initial-setup gnome-logs usbview hardinfo qjournalctl
-	groupadd -r audit
-	gpasswd -a $USER_NAME audit
+	arch-chroot /mnt pacman -S --needed --noconfirm usbctl grub-customizer trizen libgksu gksu apparmor audit lynis auditbeat arch-audit tilix tilix-themes-git vte-tilix-common vte3-tilix gogh-git
+	arch-chroot /mnt pacman -S --needed --noconfirm pamac-classic repoctl-git gparted htop gnome-disk-utility gnome-initial-setup gnome-logs usbview hardinfo qjournalctl
+	arch-chroot /mnt groupadd -r audit
+	arch-chroot /mnt gpasswd -a $USER_NAME audit
 	arch-chroot /mnt systemctl enable deny-new-usb.service
 	
 # GPU Drivers
@@ -260,16 +260,15 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	arch-chroot /mnt pacman -S --needed --noconfirm adwaita-icon-theme deepin-gtk-theme adapta-gtk-theme materia-gtk-theme breeze-icons papirus-icon-theme arc-icon-theme deepin-icon-theme 
 	arch-chroot /mnt pacman -S --needed --noconfirm bedstead-fonts tamzen-font-git terminus-font ttf-zekton-rg
 
-# PROGRAMMING
-	arch-chroot /mnt pacman -S --needed --noconfirm geany geany-plugins geany-themes-git meld github-desktop-bin
-
 # DEVELOP	
-	arch-chroot /mnt pacman -S --needed --noconfirm cmake extra-cmake-modules gnome-common qt qt5 qtcreator python python-pip python2 python2-pip ghostwriter-git 
+	arch-chroot /mnt pacman -S --needed --noconfirm cmake extra-cmake-modules gnome-common qt qt5 qtcreator python python-pip python2 python2-pip python-setuptools python2-setuptools
 
 # INTERNET
 	arch-chroot /mnt pacman -S --needed --noconfirm firefox firefox-dark-reader firefox-adblock-plus firefox-ublock-origin firefox-extension-video-download-helper firefox-extension-privacybadger
 	arch-chroot /mnt pacman -S --needed --noconfirm chromium filezilla transmission-gtk gpg-crypter keepassxc  
-	arch-chroot /mnt pacman -S --needed --noconfirm python-grpcio-tools opensnitch-git
+	
+# PROGRAMMING
+	arch-chroot /mnt pacman -S --needed --noconfirm geany geany-plugins geany-themes-git meld github-desktop-bin ghostwriter-git
 	
 # AUDIO
 	arch-chroot /mnt pacman -S --needed --noconfirm pulseaudio pulseaudio-bluetooth pulseaudio-equalizer-ladspa pavucontrol pulseaudio-alsa libpulse libcanberra-pulse paprefs
@@ -278,11 +277,17 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 # VIDEO
 	arch-chroot /mnt pacman -S --needed --noconfirm vlc vlc-arc-dark-git smplayer smplayer-skins smplayer-themes 
 
+# SECURITY 
+	arch-chroot /mnt pacman -S --needed --noconfirm gnome-nettool kismet wireshark-cli wireshark-qt ettercap-gtk etherape dsniff nmap aircrack-ng-git bettercap-git bettercap-caplets-git bettercap-ui netactview python-grpcio-tools opensnitch-git wifite2-git
+	arch-chroot /mnt systemctl enable opensnitchd.service
+	arch-chroot /mnt gpasswd -a $USER_NAME wireshark
+	arch-chroot /mnt gpasswd -a $USER_NAME kismet
+	
 # OFFICE
 	arch-chroot /mnt pacman -S --needed --noconfirm libreoffice-fresh 
 	
 # VPN
-	arch-chroot /mnt pacman -S --needed --noconfirm openvpn-update-systemd-resolved protonvpn-cli-git
+	arch-chroot /mnt pacman -S --needed --noconfirm openvpn-update-systemd-resolved protonvpn-cli-git 
 	
 # INSTALL CONFIGS
 	arch-chroot /mnt curl -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/makepkg.conf
