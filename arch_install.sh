@@ -288,6 +288,8 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	
 # INSTALL CONFIGS
 	arch-chroot /mnt curl -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/makepkg.conf
+	arch-chroot /mnt curl -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/sshd_config
+	arch-chroot /mnt curl -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/lightdm.conf
 
 ###################################
 #########     END OF SETUP       ##
