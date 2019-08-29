@@ -152,9 +152,8 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 #########    INSTALL BASE SYSTEM       ##
 #########################################
 
-	wget https://github.com/xNNism/arch-install/raw/master/config/pacman.conf
-	cp pacman.conf /etc/pacman.conf
-	cp pacman.conf /mnt/etc/pacman.conf
+	curl -o /etc/pacman.conf https://github.com/xNNism/arch-install/raw/master/config/pacman.conf
+	cp -r /etc/pacman.conf /mnt/etc/pacman.conf
 	#
 	pacman -Syyy --needed --noconfirm reflector
 	reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
@@ -288,7 +287,7 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	arch-chroot /mnt $PACMAN openvpn-update-systemd-resolved protonvpn-cli-git
 	
 # INSTALL CONFIGS
-	arch-chroot /mnt wget -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/makepkg.conf
+	arch-chroot /mnt curl -o /etc/makepkg.conf https://raw.githubusercontent.com/xNNism/arch-install/master/config/makepkg.conf
 
 ###################################
 #########     END OF SETUP       ##
