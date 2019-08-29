@@ -59,17 +59,17 @@ timedatectl set-ntp true
 ########################################################################
 #
 ### undo previous install attempt
-#if [ -d /mnt/boot ]; then
-#umount /mnt/boot
-#umount /mnt
-#fi
-#
-#if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
-#lvremove --force "$LVM_VOLUME_GROUP"
-#pvremove --force --force "/dev/mapper/$LVM_VOLUME_PHISICAL"
-#cryptsetup close $LVM_VOLUME_PHISICAL
-#fi
-#
+if [ -d /mnt/boot ]; then
+umount /mnt/boot
+umount /mnt
+fi
+
+if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
+lvremove --force "$LVM_VOLUME_GROUP"
+pvremove --force --force "/dev/mapper/$LVM_VOLUME_PHISICAL"
+cryptsetup close $LVM_VOLUME_PHISICAL
+fi
+
 ### START PARTITIONING
 sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
