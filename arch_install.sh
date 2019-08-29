@@ -145,7 +145,7 @@ arch-chroot /mnt pacman -S --needed --noconfirm linux-headers linux-hardened lin
 # mkinitcpio
 #
 arch-chroot /mnt sed -i 's/ block / block keyboard keymap /' /etc/mkinitcpio.conf
-arch-chroot /mnt sed -i 's/ filesystems keyboard / encrypt filesystems /' /etc/mkinitcpio.conf
+arch-chroot /mnt sed -i 's/ filesystems keyboard / encrypt lvm2 filesystems /' /etc/mkinitcpio.conf
 arch-chroot /mnt mkinitcpio -P
 #
 # BOOTLOADER
