@@ -125,7 +125,6 @@ pacstrap /mnt base base-devel
 cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 arch-chroot /mnt systemctl enable fstrim.timer
 
-arch-chroot /mnt pacman -S linux-headers linux-hardened linux-hardened-headers
 #
 genfstab -U /mnt >> /mnt/etc/fstab
 sed -i 's/relatime/noatime/' /mnt/etc/fstab
@@ -138,13 +137,13 @@ echo -e "LANG=en_US.UTF-8" > /mnt/etc/vconsole.conf
 #
 echo $HOSTNAME > /mnt/etc/hostname
 printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
+
 #
-arch-chroot /mnt pacman -S networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
-arch-chroot /mnt systemctl enable NetworkManager.service
+arch-chroot /mnt pacman -S linux-headers linux-hardened linux-hardened-headers
+
 #
 # mkinitcpio
 #
-arch-chroot /mnt sed -i "MODULES="nvidia nvidia_modeset nvidia_uvm nvidia_drm"" /etc/mkinitcpio.conf
 arch-chroot /mnt sed -i 's/ block / block keyboard keymap /' /etc/mkinitcpio.conf
 arch-chroot /mnt sed -i 's/ filesystems keyboard / encrypt filesystems /' /etc/mkinitcpio.conf
 arch-chroot /mnt mkinitcpio -P
@@ -167,6 +166,10 @@ arch-chroot /mnt pacman -S grub dosfstools
     echo "GRUB_DISABLE_SUBMENU=y" >> /mnt/etc/default/grub
 arch-chroot /mnt pacman -S efibootmgr
 arch-chroot /mnt grub-install --target=x86_64-efi --bootloader-id=grub --efi-directory=$ESP_DIRECTORY --recheck
+
+# NetworkManager
+arch-chroot /mnt pacman -S networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
+arch-chroot /mnt systemctl enable NetworkManager.service
 
 #cat >>/etc/pacman.conf <<EOF
 #[x0C-r3po]
