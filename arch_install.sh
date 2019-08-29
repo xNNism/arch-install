@@ -54,7 +54,7 @@ clear
 : ${HOSTNAME:?"hostname cannot be empty"}
 
 ### ROOT PASSWORD:
-ROOT_PASSWORD=$(dialog --stdout --passwordbox "Enter root password" 0 0) || exit 1
+ROOT_PASSWORD=$(dialog --stdout --passwordbox "Enter password for root" 0 0) || exit 1
 clear
 : ${ROOT_PASSWORD:?"password cannot be empty"}
 ROOT_PASSWORD2=$(dialog --stdout --passwordbox "Enter root password again" 0 0) || exit 1
@@ -62,12 +62,12 @@ clear
 [[ "$ROOT_PASSWORD" == "$ROOT_PASSWORD2" ]] || ( echo "Passwords did not match"; exit 1; )
 
 ### USERNAME:
-USER_NAME=$(dialog --stdout --inputbox "Enter username" 0 0) || exit 1
+USER_NAME=$(dialog --stdout --inputbox "Enter name of new user" 0 0) || exit 1
 clear
 : ${$USER_NAME:?"user cannot be empty"}
 
 ### USER PASSWORD:
-USER_PASSWORD=$(dialog --stdout --passwordbox "Enter user password" 0 0) || exit 1
+USER_PASSWORD=$(dialog --stdout --passwordbox "Enter password for new user" 0 0) || exit 1
 clear
 : ${USER_PASSWORD:?"password cannot be empty"}
 USER_PASSWORD2=$(dialog --stdout --passwordbox "Enter user password again" 0 0) || exit 1
@@ -80,7 +80,7 @@ DEVICE=$(dialog --stdout --menu "Select installation disk" 0 0 0 ${DEVICELIST}) 
 clear
 
 ### LVM:
-PARTITION_ROOT_ENCRYPTION_PASSWORD=$(dialog --stdout --passwordbox "Enter LVM password" 0 0) || exit 1
+PARTITION_ROOT_ENCRYPTION_PASSWORD=$(dialog --stdout --passwordbox "Enter password for LVM" 0 0) || exit 1
 clear
 : ${PARTITION_ROOT_ENCRYPTION_PASSWORD:?"password cannot be empty"}
 PARTITION_ROOT_ENCRYPTION_PASSWORD2=$(dialog --stdout --passwordbox "Enter LVM password again" 0 0) || exit 1
@@ -153,8 +153,7 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 #########################################
 
 	curl -o /etc/pacman.conf https://github.com/xNNism/arch-install/raw/master/config/pacman.conf
-	cp -r /etc/pacman.conf /mnt/etc/pacman.conf
-	#
+		#
 	pacman -Syyy --needed --noconfirm reflector
 	reflector -c DE -f 15 > /etc/pacman.d/mirrorlist
 	#
@@ -222,7 +221,7 @@ PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 	arch-chroot /mnt pacman-key --populate archlinux
 	arch-chroot /mnt pacman -Syyy
 	arch-chroot /mnt pacman -Syyyuuu
-	
+	cp -r /etc/pacman.conf /mnt/etc/pacman.conf
 # NetworkManager
 	arch-chroot /mnt $PACMAN networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
 	arch-chroot /mnt systemctl enable NetworkManager.service
