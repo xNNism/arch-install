@@ -75,7 +75,6 @@ sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
 export PARTITION_BOOT="${DEVICE}1"
 export PARTITION_ROOT="${DEVICE}2"
-export DEVICE_ROOT="${DEVICE}2"
 #
 parted -s $DEVICE mklabel gpt mkpart primary fat32 1MiB 512MiB mkpart primary ext4 512MiB 100% set 1 boot on
 sgdisk -t=1:ef00 $DEVICE
@@ -88,7 +87,7 @@ pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
 vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
 lvcreate -l 100%FREE -n $LVM_VOLUME_LOGICAL $LVM_VOLUME_GROUP
 #
-# export DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
+export DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
 #
 wipefs -a $PARTITION_BOOT
 wipefs -a $DEVICE_ROOT
