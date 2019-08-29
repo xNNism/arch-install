@@ -32,7 +32,7 @@ clear
 ### username
 USER_NAME=$(dialog --stdout --inputbox "Enter username" 0 0) || exit 1
 clear
-: ${user:?"user cannot be empty"}
+: ${$USER_NAME:?"user cannot be empty"}
 
 USER_PASSWORD=$(dialog --stdout --passwordbox "Enter user password" 0 0) || exit 1
 clear
