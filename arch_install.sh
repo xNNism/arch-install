@@ -163,7 +163,7 @@ CMDLINE_LINUX="cryptdevice=PARTUUID=$PARTUUID_ROOT:$LVM_VOLUME_PHISICAL$BOOTLOAD
     echo "" >> /mnt/etc/default/grub
     echo "# alis" >> /mnt/etc/default/grub
     echo "GRUB_DISABLE_SUBMENU=y" >> /mnt/etc/default/grub
-arch-chroot /mnt grub-install --target=x86_64-efi --bootloader-id=grub --efi-directory=$ESP_DIRECTORY --recheck
+arch-chroot /mnt grub-install --target=x86_64-efi --bootloader-id=grub --efi-directory=/boot --recheck
 
 # NetworkManager
 arch-chroot /mnt pacman -S --needed --noconfirm networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
