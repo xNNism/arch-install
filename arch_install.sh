@@ -139,6 +139,8 @@ echo $HOSTNAME > /mnt/etc/hostname
 printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
 
 #
+# Kernels
+#
 arch-chroot /mnt pacman -S linux-headers linux-hardened linux-hardened-headers
 
 #
@@ -156,7 +158,6 @@ BOOTLOADER_ALLOW_DISCARDS=":allow-discards"
 CMDLINE_LINUX="cryptdevice=PARTUUID=$PARTUUID_ROOT:$LVM_VOLUME_PHISICAL$BOOTLOADER_ALLOW_DISCARDS"
 #
 arch-chroot /mnt pacman -S grub dosfstools
-    pacman_install "grub dosfstools"
     arch-chroot /mnt sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/' /etc/default/grub
     arch-chroot /mnt sed -i 's/#GRUB_SAVEDEFAULT="true"/GRUB_SAVEDEFAULT="true"/' /etc/default/grub
     arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /etc/default/grub
@@ -171,6 +172,10 @@ arch-chroot /mnt grub-install --target=x86_64-efi --bootloader-id=grub --efi-dir
 arch-chroot /mnt pacman -S networkmanager networkmanager-openvpn libnm libnma nm-connection-editor network-manager-applet
 arch-chroot /mnt systemctl enable NetworkManager.service
 
+
+###############################################
+### UNUSED  ###################################
+###############################################
 #cat >>/etc/pacman.conf <<EOF
 #[x0C-r3po]
 #SigLevel = Optional TrustAll
