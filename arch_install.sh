@@ -112,30 +112,28 @@ fi
 ######################################
 #########    SETUP PARTITIONS       ##
 ######################################
-sgdisk --zap-all $DEVICE
-wipefs -a $DEVICE
 
 if [ -n "$(echo $DEVICE | grep "^sda")" ]; then
 		DEVICE_SATA1="${DEVICE}p1"
 		DEVICE_SATA2="${DEVICE}p2"
-        PARTITION_BOOT="$DEVICE_SATA1"
-        PARTITION_ROOT="$DEVICE_SATA2"
+        PARTITION_BOOT="${DEVICE_SATA1}"
+        PARTITION_ROOT="${DEVICE_SATA2}"
         
     elif [ -n "$(echo $DEVICE | grep "^nvme")" ]; then
 		DEVICE_NVME1="${DEVICE}p1"
 		DEVICE_NVME2="${DEVICE}p2"
-        PARTITION_BOOT="$DEVICE_NVME1"
-        PARTITION_ROOT="$DEVICE_NVME2"
+        PARTITION_BOOT="${DEVICE_NVME1}"
+        PARTITION_ROOT="${DEVICE_NVME2}"
         
     elif [ -n "$(echo $DEVICE | grep "^mmc")" ]; then
 		DEVICE_MMC1="${DEVICE}p1"
 		DEVICE_MMC2="${DEVICE}p2"
-        PARTITION_BOOT="$DEVICE_MMC1"
-        PARTITION_ROOT="$DEVICE_MMC2"
+        PARTITION_BOOT="${DEVICE_MMC1}"
+        PARTITION_ROOT="${DEVICE_MMC2}"
     fi
 
-#sgdisk --zap-all $DEVICE
-#wipefs -a $DEVICE
+sgdisk --zap-all $DEVICE
+wipefs -a $DEVICE
 #PARTITION_BOOT="${DEVICE}1"
 #PARTITION_ROOT="${DEVICE}2"
 #
