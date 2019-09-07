@@ -113,6 +113,19 @@ fi
 #########    SETUP PARTITIONS       ##
 ######################################
 
+if [ -n "$(echo $DEVICE | grep "^sda")" ]; then
+        PARTITION_BOOT="${DEVICE}1"
+        PARTITION_ROOT="${DEVICE}2"
+        
+    elif [ -n "$(echo $DEVICE | grep "^nvme")" ]; then
+        PARTITION_BOOT="${DEVICE}p1"
+        PARTITION_ROOT="${DEVICE}p2"
+        
+    elif [ -n "$(echo $DEVICE | grep "^mmc")" ]; then
+        PARTITION_BOOT="${DEVICE}p1"
+        PARTITION_ROOT="${DEVICE}p2"
+    fi
+
 sgdisk --zap-all $DEVICE
 wipefs -a $DEVICE
 PARTITION_BOOT="${DEVICE}1"
